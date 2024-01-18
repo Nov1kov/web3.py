@@ -169,6 +169,13 @@ RECEIPT_RESULT_KEY_MAPPING = {
 }
 receipt_result_remapper = apply_key_map(RECEIPT_RESULT_KEY_MAPPING)
 
+FEE_HISTORY_RESULT_KEY_MAPPING = {
+    "gas_used_ratio": "gasUsedRatio",
+    "base_fee_per_gas": "baseFeePerGas",
+    "oldest_block": "oldestBlock",
+}
+
+fee_history_result_remapper = apply_key_map(FEE_HISTORY_RESULT_KEY_MAPPING)
 
 BLOCK_RESULT_KEY_MAPPING = {
     "gas_limit": "gasLimit",
@@ -208,6 +215,10 @@ receipt_result_formatter = apply_formatters_to_dict(RECEIPT_RESULT_FORMATTERS)
 request_formatters = {
     # Eth
     RPCEndpoint("eth_getBlockByNumber"): apply_formatters_to_args(
+        apply_formatter_if(is_not_named_block, to_integer_if_hex),
+    ),
+    RPCEndpoint("eth_feeHistory"): apply_formatters_to_args(
+        to_integer_if_hex,
         apply_formatter_if(is_not_named_block, to_integer_if_hex),
     ),
     RPCEndpoint("eth_getFilterChanges"): apply_formatters_to_args(hex_to_integer),
@@ -275,6 +286,10 @@ result_formatters: Optional[Dict[RPCEndpoint, Callable[..., Any]]] = {
     RPCEndpoint("eth_getBlockByHash"): apply_formatter_if(
         is_dict,
         compose(block_result_remapper, block_result_formatter),
+    ),
+    RPCEndpoint("eth_feeHistory"): apply_formatter_if(
+        is_dict,
+        compose(fee_history_result_remapper),
     ),
     RPCEndpoint("eth_getBlockByNumber"): apply_formatter_if(
         is_dict,
